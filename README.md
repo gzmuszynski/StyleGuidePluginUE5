@@ -5,11 +5,11 @@ It uses UE's data validation framework, so it will validate all assets on save (
 
 ## Installation
 
-Drop the StyleGuidePlugin into %project_dir%/Plugins/ directory, ensure it's enabled in your project
+Drop the StyleGuidePlugin into %project_dir%/Plugins/StyleGuidePlugin directory, ensure it's enabled in your project
 
 ## Uinstallation
 
-Remove the plugin from %project_dir%/Plugins/
+Remove the plugin from %project_dir%/Plugins/StyleGuidePlugin
 
 ## Usage
 
