@@ -1,5 +1,7 @@
 # Style Guide Plugin for Unreal Engine 5
 
+![Style Guide Plugin Icon](Resources/Icon128.png)
+
 This plugin attempts to let developers enforce customizable style guides (like the one from https://ue4.style/), either through global developer settings, or on per-directory basis. 
 It uses UE's data validation framework, so it will validate all assets on save (if data validation is turned on, read epic's documentation for more information)
 
