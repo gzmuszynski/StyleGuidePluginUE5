@@ -1,0 +1,27 @@
+{
+	"FileVersion": 3,
+	"Version": 1,
+	"VersionName": "1.0",
+	"FriendlyName": "StyleGuidePlugin",
+	"Description": "Validates and enforces style guides",
+	"Category": "Other",
+	"CreatedBy": "Grzegorz Muszynski",
+	"CreatedByURL": "https://github.com/gzmuszynski/StyleGuidePluginUE5",
+	"DocsURL": "https://github.com/gzmuszynski/StyleGuidePluginUE5",
+	"MarketplaceURL": "",
+	"SupportURL": "",
+	"CanContainContent": false,
+	"IsBetaVersion": false,
+	"IsExperimentalVersion": false,
+	"Installed": false,
+	"Modules": [
+		{
+			"Name": "StyleGuidePlugin",
+			"Type": "Editor",
+			"LoadingPhase": "Default",
+			"AdditionalDependencies": [
+				"PropertyEditor"
+			]
+		}
+	]
+}
