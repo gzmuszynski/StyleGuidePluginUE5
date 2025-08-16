@@ -17,17 +17,23 @@ EDataValidationResult USGValidator::ValidateLoadedAsset_Implementation(const FAs
 	
 	for (USGSetup* Setup : CachedSetups)
 	{
-		for (USGModule* Module :Setup->Settings.Modules)
+		if(Setup)
 		{
-			UClass* ModuleClass = Module->GetClass();
-			if (!CachedModules.Contains(ModuleClass))
+			for (USGModule* Module :Setup->Settings.Modules)
 			{
-				CachedModules.Add(ModuleClass, CachedSetup->Settings.Modules.Add_GetRef(
-					NewObject<USGModule>(CachedSetup, ModuleClass)));
-			}
-			USGModule* CachedModule = CachedModules[ModuleClass];
+				if (Module)
+				{
+					UClass* ModuleClass = Module->GetClass();
+					if (!CachedModules.Contains(ModuleClass))
+					{
+						CachedModules.Add(ModuleClass, CachedSetup->Settings.Modules.Add_GetRef(
+							NewObject<USGModule>(CachedSetup, ModuleClass)));
+					}
+					USGModule* CachedModule = CachedModules[ModuleClass];
 
-			CachedModule->MergeModuleSettings(Module);
+					CachedModule->MergeModuleSettings(Module);
+				}
+			}
 		}
 	}
 	
