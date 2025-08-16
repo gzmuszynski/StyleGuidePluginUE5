@@ -109,9 +109,9 @@ EDataValidationResult USGAssetNamingModule::ValidateLoadedAsset(const FAssetData
 		{
 			Result = EDataValidationResult::Valid;
 			FFormatNamedArguments Args;
-			Args.Add(TEXT("AssetName"), FText::FromString(AssetName));
+			Args.Add(TEXT("Class"), InAssetData.GetClass()->GetDisplayNameText());
 			Result = SubmitValidationFailEvent(Settings.UnknownTypesVerbosity, InAsset,
-					FText::Format(LOCTEXT("FailTest", "Asset has an unknown class"), Args));
+					FText::Format(LOCTEXT("FailTest", "Asset uses class {Class}, which is unregistered with style guide"), Args));
 		}
 	}
 	else if(IsCheckEnabled(GET_MEMBER_NAME_CHECKED(FSGAssetNamingSettings, PreSuffixVerbosity)))
@@ -135,12 +135,12 @@ EDataValidationResult USGAssetNamingModule::ValidateLoadedAsset(const FAssetData
              	}
              	else
              	{
-             		PrefixCorrect = AssetName.StartsWith(DefaultVariant.Prefix);
+             		PrefixCorrect |= AssetName.StartsWith(DefaultVariant.Prefix);
              	}
             }
             else
             {
-             	PrefixCorrect = AssetName.StartsWith(Variant.Prefix);
+             	PrefixCorrect |= AssetName.StartsWith(Variant.Prefix);
             }
  
             if(Variant.Suffix.IsEmpty())
@@ -151,12 +151,12 @@ EDataValidationResult USGAssetNamingModule::ValidateLoadedAsset(const FAssetData
              	}
              	else
              	{
-             		SuffixCorrect = AssetName.StartsWith(DefaultVariant.Suffix);
+             		SuffixCorrect |= AssetName.EndsWith(DefaultVariant.Suffix);
              	}
             }
             else
             {
-             	SuffixCorrect = AssetName.StartsWith(Variant.Suffix);
+             	SuffixCorrect |= AssetName.EndsWith(Variant.Suffix);
             }
         }
 		
