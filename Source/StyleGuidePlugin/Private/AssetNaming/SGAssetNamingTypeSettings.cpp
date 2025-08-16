@@ -16,7 +16,7 @@ bool FSGAssetNamingTypeSettings::operator==(const FSGAssetNamingTypeSettings& Ot
 
 bool FSGAssetNamingTypeSettings::operator==(const TSoftClassPtr<>& Other) const
 {
-	return Other->IsChildOf(Class.Get());
+	return Class->IsChildOf(Other.Get());
 }
 
 FSGAssetNamingTypeVariant& FSGAssetNamingTypeSettings::GetDefaultVariant()
