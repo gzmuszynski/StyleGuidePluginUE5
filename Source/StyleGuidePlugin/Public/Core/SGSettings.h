@@ -18,7 +18,7 @@ struct STYLEGUIDEPLUGIN_API FSGSettings
 	UPROPERTY(EditAnywhere, Category="Asset Naming", BlueprintReadOnly, meta=(InlineEditConditionToggle))
 	bool Override_AllowedCharacters = false;
 	
-	// Only allows identifiers that match following RegEx expression
+	// Only allows identifiers that match following RegEx expression (can be overriden in modules)
 	UPROPERTY(EditAnywhere, Category="Asset Naming", BlueprintReadOnly, meta=(EditCondition="Override_AllowedCharacters"))
 	FString AllowedCharacters = "[A-Za-z0-9_]+";
 	

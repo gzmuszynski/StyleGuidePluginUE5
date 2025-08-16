@@ -31,7 +31,7 @@ struct STYLEGUIDEPLUGIN_API FSGAssetNamingSettings
 	
 	// Defines the allowed characters during the identifier check.
 	UPROPERTY(EditAnywhere, Category="Asset Naming", BlueprintReadOnly, meta=(EditCondition="Override_AllowedCharacters"))
-	FString AllowedCharacters;
+	FString AllowedCharacters = "[A-Za-z0-9_]+";
 
 	UPROPERTY(EditAnywhere, Category="Asset Naming", BlueprintReadOnly, meta=(InlineEditConditionToggle))
 	bool Override_UnknownTypesVerbosity = true;
@@ -60,8 +60,14 @@ class STYLEGUIDEPLUGIN_API USGAssetNamingModule : public USGModule
 	GENERATED_BODY()
 public:
 	
-	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category=AssetNaming, meta=(ShowOnlyInnerProperties))
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category="Asset Naming", meta=(ShowOnlyInnerProperties,
+		EditCondition = "bDisableModuleChecks != true"))
 	FSGAssetNamingSettings Settings;
 
-	void OverrideTypeSettings(const FSGAssetNamingTypeSettings& InTypeSettings);
+	virtual void MergeModuleSettings_Implementation(USGModule* Module) override;
+
+	virtual bool CanValidateAsset(const FAssetData& InAssetData, UObject* Object,
+	                              FDataValidationContext& Context) const override;
+	virtual EDataValidationResult ValidateLoadedAsset(const FAssetData& InAssetData, UObject* InAsset,
+	                                                  const FDataValidationContext& Context) override;
 };
