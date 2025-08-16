@@ -33,7 +33,7 @@ struct STYLEGUIDEPLUGIN_API FSGAssetNamingTypeSettings
 
 	FSGAssetNamingTypeSettings();
 	
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta=(AllowAbstract))
 	TSoftClassPtr<UObject> Class;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta=(TitleProperty="Name"))
