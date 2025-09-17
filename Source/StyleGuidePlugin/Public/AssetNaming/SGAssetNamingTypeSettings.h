@@ -57,7 +57,7 @@ struct STYLEGUIDEPLUGIN_API FSGAssetNamingTypeTable
 	TArray<FSGAssetNamingTypeSettings> Types;
 
 	bool Contains(const TSoftClassPtr<UObject>& Type) const;
-	FSGAssetNamingTypeSettings* Find(const TSoftClassPtr<UObject>& Type) const;
+	FSGAssetNamingTypeSettings* Find(const TSoftClassPtr<UObject>& Type, const UObject* Object = nullptr) const;
 	
 	void Add(const FSGAssetNamingTypeSettings& InTypeSettings);
 };

@@ -46,6 +46,7 @@ protected:
 	bool bDisableModuleChecks = false;
 	
 	bool IsCheckEnabled(FName CheckPropertyName) const;
+	void SubmitMessage(const UObject* Asset, FText Message);
 	//Automatically checks asset validation fail verbosity, adds message to context stack,
 	//And returns appropriate validation result.
 	UFUNCTION(BlueprintCallable, meta=(BlueprintProtected))

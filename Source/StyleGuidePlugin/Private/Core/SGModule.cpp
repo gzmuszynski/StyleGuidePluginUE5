@@ -34,6 +34,11 @@ bool USGModule::IsCheckEnabled(FName CheckPropertyName) const
 	return true;
 }
 
+void USGModule::SubmitMessage(const UObject* Asset, FText Message)
+{
+	ValidationMessages.Add({EMessageSeverity::Info, Message});
+}
+
 EDataValidationResult USGModule::SubmitValidationFailEvent(ESGValidationVerbosity Verbosity, const UObject* Asset,
                                                            FText Message)
 {

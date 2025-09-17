@@ -75,7 +75,7 @@ EDataValidationResult USGAssetNamingModule::ValidateLoadedAsset(const FAssetData
 		return EDataValidationResult::NotValidated;
 	}
 	
-	FSGAssetNamingTypeSettings* TypeSettings = Settings.AssetTypeTable.Find(InAssetData.GetClass());
+	FSGAssetNamingTypeSettings* TypeSettings = Settings.AssetTypeTable.Find(InAssetData.GetClass(), InAsset);
 	
 	FString AssetName = InAssetData.AssetName.ToString();
 	
@@ -165,9 +165,23 @@ EDataValidationResult USGAssetNamingModule::ValidateLoadedAsset(const FAssetData
 			FFormatNamedArguments Args;
 			Args.Add(TEXT("AssetName"), FText::FromString(AssetName));
 			Args.Add(TEXT("AssetType"), TypeSettings->Class->GetDisplayNameText());
-
+			FText Variants;
+			for (FSGAssetNamingTypeVariant Variant : TypeSettings->Variants)
+			{
+				FFormatNamedArguments VariantArgs;
+				VariantArgs.Add(TEXT("Variants"), Variants);
+				VariantArgs.Add(TEXT("VariantName"), FText::FromName(Variant.Name));
+				VariantArgs.Add(TEXT("Prefix"), FText::FromString(Variant.Prefix));
+				VariantArgs.Add(TEXT("Suffix"), FText::FromString(Variant.Suffix));
+				
+				Variants = FText::Format(LOCTEXT("FailTest", "{Variants}\n- {Prefix}AssetName{Suffix} ({VariantName})"), VariantArgs);
+			}
+			Args.Add(TEXT("Variants"), Variants);
+			
 			SubmitValidationFailEvent(Settings.PreSuffixVerbosity, InAsset,
-			FText::Format(LOCTEXT("FailTest", "Asset does not follow asset naming scheme for asset type {AssetType}"), Args));
+			FText::Format(LOCTEXT("FailTest", "Asset does not follow asset naming scheme for asset type {AssetType}:\n{Variants}\n\nPlease rename the asset"), Args));
+
+			
 		}
     }
 	return Result;
