@@ -11,6 +11,8 @@
 EDataValidationResult USGValidator::ValidateLoadedAsset_Implementation(const FAssetData& InAssetData,
 	UObject* InAsset, FDataValidationContext& Context)
 {
+	// TODO: Ensure the assets will be sorted desc by hierarchy.
+	
 	TArray<USGSetup*> CachedSetups = GetStyleGuideSetupAssets(InAssetData);
 	const auto CachedSetup = NewObject<USGSetup>(this);
 	TMap<TSubclassOf<USGModule>, USGModule*> CachedModules;
@@ -85,15 +87,15 @@ TArray<USGSetup*> USGValidator::GetStyleGuideSetupAssets(const FAssetData& InAss
 {
 	TArray<USGSetup*> SGSetups;
 	
-	if(auto SGDeveloperSettings = GetMutableDefault<USGDeveloperSettings>())
+	if(const auto SGDeveloperSettings = GetMutableDefault<USGDeveloperSettings>())
 	{
 		if(USGSetup* Setup = SGDeveloperSettings->GlobalSetup.Get())
 		{
 			SGSetups.Add(Setup);
 		}
 	}
-	
-	IAssetRegistry& AssetRegistry = FModuleManager::LoadModuleChecked<FAssetRegistryModule>(TEXT("AssetRegistry")).Get();
+
+	const IAssetRegistry& AssetRegistry = FModuleManager::LoadModuleChecked<FAssetRegistryModule>(TEXT("AssetRegistry")).Get();
 
 	TArray<FAssetData> RedirectAssets;
 	AssetRegistry.GetAssetsByClass(USGSetup::StaticClass()->GetClassPathName(), RedirectAssets);
