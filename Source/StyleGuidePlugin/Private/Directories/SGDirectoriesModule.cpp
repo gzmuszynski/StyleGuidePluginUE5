@@ -78,7 +78,7 @@ EDataValidationResult USGDirectoriesModule::ValidateLoadedAsset(const FAssetData
 				Args.Add(TEXT("Path"), FText::FromName(InAssetData.PackagePath));
 
 				const FText Message = FText::Format(
-					LOCTEXT("NotInAllowedDirectory", "Asset is placed inside of a Disallowed Directory: {Directory}"), Args);
+					LOCTEXT("InDisallowedDirectory", "Asset is placed inside of a Disallowed Directory: {Directory}"), Args);
 				Result = SubmitValidationFailEvent(ValidationVerbosity, InAsset, Message);
 				break;
 			
@@ -93,10 +93,9 @@ EDataValidationResult USGDirectoriesModule::ValidateLoadedAsset(const FAssetData
 		Args.Add(TEXT("Path"), FText::FromName(InAssetData.PackagePath));
 
 		const FText Message = FText::Format(
-			LOCTEXT("NotInAllowedDirectory", "Asset is placed inside of a Disallowed Directory: {Directory}"), Args);
+			LOCTEXT("InDisallowedCurrentDirectory", "Asset is placed inside of a Disallowed Directory: {Directory}"), Args);
 		Result = SubmitValidationFailEvent(ValidationVerbosity, InAsset, Message);
 	}
-	//TODO: Check bDisallowAssetsInCurrentDirectory
 	return Result;
 	
 }
