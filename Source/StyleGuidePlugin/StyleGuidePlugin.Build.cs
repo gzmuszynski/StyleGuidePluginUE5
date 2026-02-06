@@ -47,7 +47,8 @@ public class StyleGuidePlugin : ModuleRules
 				"Engine",
 				"Slate",
 				"SlateCore",
-				"PropertyEditor"
+				"PropertyEditor", 
+				"AssetManagerEditor"
 				// ... add private dependencies that you statically link with here ...	
 			}
 			);

@@ -48,23 +48,7 @@ void USGAssetNamingModule::MergeModuleSettings_Implementation(USGModule* Module)
 bool USGAssetNamingModule::CanValidateAsset(const FAssetData& InAssetData, UObject* Object,
                                             FDataValidationContext& Context) const
 {
-	if (bDisableModuleChecks)
-	{
-		return false;
-	}
-	IAssetRegistry& AssetRegistry = FModuleManager::LoadModuleChecked<FAssetRegistryModule>(TEXT("AssetRegistry")).Get();
-	
-	TArray<FAssetData> RedirectAssets;
-	AssetRegistry.GetAssetsByClass(USGSetup::StaticClass()->GetClassPathName(), RedirectAssets);
-	for(const FAssetData& AssetData : RedirectAssets)
-	{
-		if(InAssetData.PackagePath == AssetData.PackagePath ||
-			InAssetData.PackagePath.ToString().Contains(AssetData.PackagePath.ToString()))
-		{
-			return true;
-		}
-	}
-	return false;
+	return Super::CanValidateAsset(InAssetData, Object, Context);
 }
 
 EDataValidationResult USGAssetNamingModule::ValidateLoadedAsset(const FAssetData& InAssetData, UObject* InAsset,

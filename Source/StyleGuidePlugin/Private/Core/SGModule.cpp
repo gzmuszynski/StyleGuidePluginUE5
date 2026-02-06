@@ -3,9 +3,10 @@
 
 #include "Core/SGModule.h"
 
-#include "ObjectPropertyNode.h"
-#include "PropertyNode.h"
 #include "AssetNaming/SGAssetNamingModule.h"
+#include "AssetRegistry/AssetRegistryModule.h"
+#include "AssetRegistry/IAssetRegistry.h"
+#include "Core/SGSetup.h"
 
 void USGModule::MergeModuleSettings_Implementation(USGModule* Module)
 {
@@ -17,8 +18,24 @@ TArray<FSGValidationMessage> USGModule::GetValidationMessages()
 	return ValidationMessages;
 }
 
-bool USGModule::CanValidateAsset(const FAssetData& AssetData, UObject* Object, FDataValidationContext& Context) const
+bool USGModule::CanValidateAsset(const FAssetData& InAssetData, UObject* Object, FDataValidationContext& Context) const
 {
+	if (bDisableModuleChecks)
+	{
+		return false;
+	}
+	IAssetRegistry& AssetRegistry = FModuleManager::LoadModuleChecked<FAssetRegistryModule>(TEXT("AssetRegistry")).Get();
+	
+	TArray<FAssetData> RedirectAssets;
+	AssetRegistry.GetAssetsByClass(USGSetup::StaticClass()->GetClassPathName(), RedirectAssets);
+	for(const FAssetData& AssetData : RedirectAssets)
+	{
+		if(InAssetData.PackagePath == AssetData.PackagePath ||
+			InAssetData.PackagePath.ToString().Contains(AssetData.PackagePath.ToString()))
+		{
+			return true;
+		}
+	}
 	return false;
 }
 

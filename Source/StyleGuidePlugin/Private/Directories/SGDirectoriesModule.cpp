@@ -55,10 +55,10 @@ EDataValidationResult USGDirectoriesModule::ValidateLoadedAsset(const FAssetData
 			FString AllowedDirectoriesString;
 			for (const FString& AllowedDirectory: AllowedDirectories)
 			{
-				AllowedDirectoriesString.Append(FString::Printf(TEXT("%s"), *AllowedDirectory));
+				AllowedDirectoriesString.Append(FString::Printf(TEXT("\n- %s"), *AllowedDirectory));
 			}
 			FFormatNamedArguments Args;
-			Args.Add(TEXT("AllowList"), FText::FromString(FString::Printf(TEXT("\n- %s"), *AllowedDirectoriesString)));
+			Args.Add(TEXT("AllowList"), FText::FromString(FString::Printf(TEXT("%s"), *AllowedDirectoriesString)));
 			Args.Add(TEXT("Path"), FText::FromName(InAssetData.PackagePath));
 
 			const FText Message = FText::Format(
@@ -103,7 +103,7 @@ EDataValidationResult USGDirectoriesModule::ValidateLoadedAsset(const FAssetData
 bool USGDirectoriesModule::CanValidateAsset(const FAssetData& AssetData, UObject* Object,
 	FDataValidationContext& Context) const
 {
-	return ValidationVerbosity != ESGValidationVerbosity::None;
+	return ValidationVerbosity != ESGValidationVerbosity::None && Super::CanValidateAsset(AssetData, Object, Context);
 }
 
 #undef LOCTEXT_NAMESPACE
