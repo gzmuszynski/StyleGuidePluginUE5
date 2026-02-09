@@ -15,12 +15,17 @@ struct STYLEGUIDEPLUGIN_API FSGSettings
 {
 	GENERATED_BODY()
 
-	UPROPERTY(EditAnywhere, Category="Asset Naming", BlueprintReadOnly, meta=(InlineEditConditionToggle))
+	UPROPERTY(EditAnywhere, Category="Common", BlueprintReadOnly, meta=(InlineEditConditionToggle))
 	bool Override_AllowedCharacters = false;
 	
 	// Only allows identifiers that match following RegEx expression (can be overriden in modules)
-	UPROPERTY(EditAnywhere, Category="Asset Naming", BlueprintReadOnly, meta=(EditCondition="Override_AllowedCharacters"))
+	UPROPERTY(EditAnywhere, Category="Common", BlueprintReadOnly, meta=(EditCondition="Override_AllowedCharacters"))
 	FString AllowedCharacters = "[A-Za-z0-9_]+";
+	
+	// Assets from within those directories will be excluded from style guide validation.
+	// This paths are relative to this asset's directory, no partial, nested match works.
+	UPROPERTY(EditAnywhere, Category="Common", BlueprintReadOnly)
+	TArray<FString> ExcludeDirectories;
 	
 	// Modules determine what parts of style guide will be validated and enforced.
 	// Modules will add up array properties and override single values,

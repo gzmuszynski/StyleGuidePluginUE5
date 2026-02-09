@@ -2,10 +2,12 @@
 
 #include "StyleGuidePlugin.h"
 
+#include "InterchangeManager.h"
 #include "DetailsCustomizations/SGAssetNameSettingsDetailsCustomization.h"
-#include "DetailsCustomizations/SGAssetNameTableDetailsCustomization.h"
 #include "DetailsCustomizations/SGAssetNameVariantDetailsCustomization.h"
 #include "AssetNaming/SGAssetNamingTypeSettings.h"
+#include "Interchange/SGInterchangeFactory.h"
+#include "Interchange/SGInterchangeTranslator.h"
 
 #define LOCTEXT_NAMESPACE "FStyleGuidePluginModule"
 
@@ -26,6 +28,9 @@ void FStyleGuidePluginModule::StartupModule()
 		FSGAssetNamingTypeVariant::StaticStruct()->GetFName(),
 			FOnGetPropertyTypeCustomizationInstance::CreateStatic(
 				&FSGAssetNameVariantDetailsCustomization::MakeInstance));
+	UInterchangeManager& InterchangeManager = UInterchangeManager::GetInterchangeManager();
+	InterchangeManager.RegisterTranslator(USGInterchangeTranslator::StaticClass());
+	InterchangeManager.RegisterFactory(USGInterchangeFactory::StaticClass());
 
 	PropertyModule.NotifyCustomizationModuleChanged();
 }

@@ -18,6 +18,15 @@ class STYLEGUIDEPLUGIN_API USGSetup : public UPrimaryDataAsset
 public:
 	UPROPERTY(EditAnywhere, Category="Setup", meta=(ShowOnlyInnerProperties))
 	FSGSettings Settings;
+	
+	UFUNCTION(BlueprintCallable, Category="Setup")
+	void ImportStyleGuide();
+	
+	UFUNCTION(BlueprintCallable, Category="Setup")
+	void ExportStyleGuide();
+	
+	UFUNCTION()
+	void MergeSettings(USGSetup* Setup);
 
 	template<typename ModuleType>
 	ModuleType* FindModuleByClass() const

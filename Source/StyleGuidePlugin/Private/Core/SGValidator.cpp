@@ -7,6 +7,7 @@
 #include "Core/SGModule.h"
 #include "Core/SGSetup.h"
 
+#define LOCTEXT_NAMESPACE "StyleGuideValidation"
 
 EDataValidationResult USGValidator::ValidateLoadedAsset_Implementation(const FAssetData& InAssetData,
 	UObject* InAsset, FDataValidationContext& Context)
@@ -21,6 +22,7 @@ EDataValidationResult USGValidator::ValidateLoadedAsset_Implementation(const FAs
 	{
 		if(Setup)
 		{
+			CachedSetup->MergeSettings(Setup);
 			for (USGModule* Module :Setup->Settings.Modules)
 			{
 				if (Module)
@@ -38,36 +40,51 @@ EDataValidationResult USGValidator::ValidateLoadedAsset_Implementation(const FAs
 			}
 		}
 	}
-	
-	for (USGModule* Module : CachedSetup->Settings.Modules)
+	bool bIsInExcludedDir = false;
+	for (FString ExcludedPath : CachedSetup->Settings.ExcludeDirectories)
 	{
-		if (Module->CanValidateAsset(InAssetData, InAsset, Context))
+		if (InAssetData.PackagePath.ToString().StartsWith(ExcludedPath))
 		{
-			Module->ValidateLoadedAsset(InAssetData, InAsset, Context);
-
-			for (FSGValidationMessage Message : Module->GetValidationMessages())
+			bIsInExcludedDir = true;
+			break;
+		}
+	}
+	if (!bIsInExcludedDir)
+	{
+		for (USGModule* Module : CachedSetup->Settings.Modules)
+		{
+			if (Module->CanValidateAsset(InAssetData, InAsset, Context))
 			{
-				switch (Message.Severity)
+				Module->ValidateLoadedAsset(InAssetData, InAsset, Context);
+
+				for (FSGValidationMessage Message : Module->GetValidationMessages())
 				{
+					switch (Message.Severity)
+					{
 					case EMessageSeverity::Warning:
-					{
-						AssetWarning(InAsset, Message.Text);
-						break;
-					}
+						{
+							AssetWarning(InAsset, Message.Text);
+							break;
+						}
 					case EMessageSeverity::Error:
-					{
-						AssetFails(InAsset, Message.Text);
-						break;
-					}
+						{
+							AssetFails(InAsset, Message.Text);
+							break;
+						}
 					case EMessageSeverity::Info:
-					{
-						AssetMessage(InAssetData, Message.Severity, Message.Text);
-						break;
-					}
+						{
+							AssetMessage(InAssetData, Message.Severity, Message.Text);
+							break;
+						}
 					default:{}
+					}
 				}
 			}
 		}
+	}
+	else
+	{
+		AssetMessage(InAssetData, EMessageSeverity::Info, LOCTEXT("AssetExcluded", "is excluded from style guide validation"));
 	}
 	if (GetValidationResult() == EDataValidationResult::NotValidated)
 	{
@@ -109,3 +126,5 @@ TArray<USGSetup*> USGValidator::GetStyleGuideSetupAssets(const FAssetData& InAss
 	}
 	return SGSetups;
 }
+
+#undef LOCTEXT_NAMESPACE

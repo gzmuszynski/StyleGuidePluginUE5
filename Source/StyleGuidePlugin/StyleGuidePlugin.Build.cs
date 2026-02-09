@@ -34,7 +34,9 @@ public class StyleGuidePlugin : ModuleRules
 				"UnrealEd",
 				"Slate",
 				"SlateCore",
-				"EditorInteractiveToolsFramework"
+				"EditorInteractiveToolsFramework",
+				"InterchangeCore",
+				"InterchangeEngine"
 				// ... add other public dependencies that you statically link with here ...
 			}
 			);

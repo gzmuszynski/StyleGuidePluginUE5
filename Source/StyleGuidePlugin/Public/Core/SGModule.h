@@ -29,6 +29,12 @@ class STYLEGUIDEPLUGIN_API USGModule : public UObject
 
 public:
 	
+	UFUNCTION(BlueprintCallable, Category="Style Guide Module")
+	static USGModule* ImportStyleGuideModule();
+	
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category="Style Guide Module")
+	FString ExportStyleGuideModule();
+	
 	UFUNCTION(BlueprintNativeEvent, Category="Style Guide Module")
 	void MergeModuleSettings(USGModule* Module);
 
@@ -42,7 +48,7 @@ public:
 protected:
 
 	//This override will disable any module checks, regardless of higher-level style guide setups.
-	UPROPERTY(EditAnywhere, Category="Module", BlueprintReadOnly)
+	UPROPERTY(EditAnywhere, Category="Style Guide Module", BlueprintReadOnly)
 	bool bDisableModuleChecks = false;
 	
 	bool IsCheckEnabled(FName CheckPropertyName) const;

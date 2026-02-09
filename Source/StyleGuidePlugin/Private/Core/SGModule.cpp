@@ -13,6 +13,16 @@ void USGModule::MergeModuleSettings_Implementation(USGModule* Module)
 	bDisableModuleChecks = Module->bDisableModuleChecks;
 }
 
+FString USGModule::ExportStyleGuideModule_Implementation()
+{
+	return FString();
+}
+
+USGModule* USGModule::ImportStyleGuideModule()
+{
+	return nullptr;
+}
+
 TArray<FSGValidationMessage> USGModule::GetValidationMessages()
 {
 	return ValidationMessages;
