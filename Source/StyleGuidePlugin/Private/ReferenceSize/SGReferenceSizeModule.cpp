@@ -14,9 +14,9 @@ if (Verbosity != ESGValidationVerbosity::None && Value > AllowedValue)\
 	FFormatNamedArguments Args;\
 	Args.Add(TEXT("Value"), FText::FromString(FString::FromInt(Value)));\
 	Args.Add(TEXT("AllowedValue"), FText::FromString(FString::FromInt(AllowedValue)));\
-	Args.Add(TEXT("Unit"), FText::FromString(##Unit));\
+	Args.Add(TEXT("Unit"), FText::FromString(#Unit));\
 	EDataValidationResult TempResult = SubmitValidationFailEvent( Verbosity, InAsset, \
-	FText::Format(LOCTEXT(#Description "Failed", \
+	FText::Format(LOCTEXT( #Description "Failed", \
 	"Asset exceeds maximum allowed " #Description " of {AllowedValue}{Unit} ({Value}{Unit})"), Args));\
 	if (Result < TempResult)\
 	{\
@@ -24,11 +24,11 @@ if (Verbosity != ESGValidationVerbosity::None && Value > AllowedValue)\
 	}\
 }
 
-#define CheckValues(Description, Value, AllowedValue, Verbosity) CheckValuesUnit(Description, Value, \
+#define CheckValues(Description, Value, AllowedValue, Verbosity) CheckValuesUnit( Description, Value, \
 AllowedValue, Verbosity, "")
 
-#define CheckSize(Configuration, Type) CheckValuesUnit(##Configuration##Type##Size, ##Configuration##Type##Size, \
-	Allowed##Configuration##Type##Size, ##Configuration##Type##SizeVerbosity, "B")
+#define CheckSize(Configuration, Type) CheckValuesUnit( Configuration##Type##Size, Configuration##Type##Size, \
+	Allowed##Configuration##Type##Size, Configuration##Type##SizeVerbosity, B)
 
 bool USGReferenceSizeModule::CanValidateAsset(const FAssetData& AssetData, UObject* Object,
                                               FDataValidationContext& Context) const
