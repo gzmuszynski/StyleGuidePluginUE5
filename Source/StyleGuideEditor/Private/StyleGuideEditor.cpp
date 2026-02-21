@@ -1,17 +1,18 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
-#include "StyleGuidePlugin.h"
+#include "StyleGuideEditor.h"
 
 #include "InterchangeManager.h"
+#include "AssetNaming/SGAssetNamingTypeSettings.h"
 #include "DetailsCustomizations/SGAssetNameSettingsDetailsCustomization.h"
 #include "DetailsCustomizations/SGAssetNameVariantDetailsCustomization.h"
 #include "AssetNaming/SGAssetNamingTypeSettings.h"
 #include "Interchange/SGInterchangeFactory.h"
 #include "Interchange/SGInterchangeTranslator.h"
 
-#define LOCTEXT_NAMESPACE "FStyleGuidePluginModule"
+#define LOCTEXT_NAMESPACE "FStyleGuideEditorModule"
 
-void FStyleGuidePluginModule::StartupModule()
+void FStyleGuideEditorModule::StartupModule()
 {
 	
 	FPropertyEditorModule& PropertyModule = FModuleManager::LoadModuleChecked<FPropertyEditorModule>("PropertyEditor");
@@ -28,14 +29,11 @@ void FStyleGuidePluginModule::StartupModule()
 		FSGAssetNamingTypeVariant::StaticStruct()->GetFName(),
 			FOnGetPropertyTypeCustomizationInstance::CreateStatic(
 				&FSGAssetNameVariantDetailsCustomization::MakeInstance));
-	UInterchangeManager& InterchangeManager = UInterchangeManager::GetInterchangeManager();
-	InterchangeManager.RegisterTranslator(USGInterchangeTranslator::StaticClass());
-	InterchangeManager.RegisterFactory(USGInterchangeFactory::StaticClass());
 
 	PropertyModule.NotifyCustomizationModuleChanged();
 }
 
-void FStyleGuidePluginModule::ShutdownModule()
+void FStyleGuideEditorModule::ShutdownModule()
 {
 	if (FModuleManager::Get().IsModuleLoaded("PropertyEditor"))
 	{
@@ -51,4 +49,4 @@ void FStyleGuidePluginModule::ShutdownModule()
 
 #undef LOCTEXT_NAMESPACE
 	
-IMPLEMENT_MODULE(FStyleGuidePluginModule, StyleGuidePlugin)
+IMPLEMENT_MODULE(FStyleGuideEditorModule, StyleGuideEditor)

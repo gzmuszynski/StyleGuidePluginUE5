@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 
-class FStyleGuidePluginModule : public IModuleInterface
+class FStyleGuideModulesModule : public IModuleInterface
 {
 public:
 

@@ -16,13 +16,44 @@
 	"Installed": false,
 	"Modules": [
 		{
-			"Name": "StyleGuidePlugin",
+			"Name": "StyleGuideCore",
 			"Type": "Editor",
 			"LoadingPhase": "Default",
 			"AdditionalDependencies": [
 				"PropertyEditor",
-				"DataValidation"
+				"DataValidation",
+				"AssetManagerEditor"
+			]
+		},
+		{
+			"Name": "StyleGuideModules",
+			"Type": "Editor",
+			"LoadingPhase": "Default",
+			"AdditionalDependencies": [
+				"PropertyEditor",
+				"DataValidation",
+				"AssetManagerEditor"
+			]
+		},
+		{
+			"Name": "StyleGuideEditor",
+			"Type": "Editor",
+			"LoadingPhase": "Default",
+			"AdditionalDependencies": [
+				"PropertyEditor",
+				"DataValidation",
+				"AssetManagerEditor"
 			]
 		}
-	]
+	],
+	"Plugins": [
+	{
+		"Name": "DataValidation",
+		"Enabled": true
+	},
+	{
+		"Name": "AssetManagerEditor",
+		"Enabled": true
+	}
+]
 }
