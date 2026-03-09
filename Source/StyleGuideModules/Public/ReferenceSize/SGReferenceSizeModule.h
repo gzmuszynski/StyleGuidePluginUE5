@@ -14,54 +14,10 @@
 class IAssetManagerEditorModule;
 class IAssetRegistry;
 
-USTRUCT()
-struct STYLEGUIDEMODULES_API FSGReferenceSizeNode
+USTRUCT(BlueprintType)
+struct STYLEGUIDEMODULES_API FSGReferenceSizeSettings
 {
 	GENERATED_BODY()
-	
-	FAssetIdentifier AssetIdentifier;
-	FAssetIdentifier OriginalAssetIdentifier;
-	const IAssetRegistry* AssetRegistry;
-	IAssetManagerEditorModule* EditorModule;
-	bool bIsGameResource;
-};
-
-USTRUCT()
-struct STYLEGUIDEMODULES_API FSGReferenceSizeResponse
-{
-	GENERATED_BODY()
-	
-	TArray<FName> DependenciesVisited;
-	TArray<FName> ReferencersVisited;
-	
-	uint64 EditorDiskSize = 0;
-	uint64 GameDiskSize = 0;
-	uint64 EditorMemorySize = 0;
-	uint64 GameMemorySize = 0;
-	
-	int CircularDependencies = 0; 
-};
-
-UCLASS(DisplayName="Reference Count and Asset Size", BlueprintType)
-class STYLEGUIDEMODULES_API USGReferenceSizeModule : public USGModule
-{
-	GENERATED_BODY()
-
-public:
-	virtual bool CanValidateAsset(const FAssetData& AssetData, UObject* Object,
-		FDataValidationContext& Context) const override;
-	virtual EDataValidationResult ValidateLoadedAsset(const FAssetData& InAssetData, UObject* InAsset,
-		const FDataValidationContext& Context) override;
-	virtual void MergeModuleSettings_Implementation(USGModule* Module) override;
-	
-protected:
-	
-	UFUNCTION(BlueprintCallable, Category="Reference Size", meta=(BlueprintProtected))
-	bool GatherDependenciesData(const FName& AssetIdentifier, int64 &EditorDiskSize, int64 &GameDiskSize, int64 &EditorMemorySize, int64 &GameMemorySize, int &Dependencies, int &Referencers, int
-	                            & CircularDependencies);
-
-	static bool VisitDependencyNode(const FSGReferenceSizeNode& Node, FSGReferenceSizeResponse& Response);
-	static bool VisitReferencerNode(const FSGReferenceSizeNode& Node, FSGReferenceSizeResponse& Response);
 	
 	UPROPERTY(EditAnywhere, Category="Reference and Size", BlueprintReadOnly)
 	ESGValidationVerbosity EditorDiskSizeVerbosity = ESGValidationVerbosity::Hint;
@@ -107,4 +63,68 @@ protected:
 	
 	UPROPERTY(EditAnywhere, Category="Reference and Size", BlueprintReadOnly)
 	ESGValidationVerbosity CircularDependenciesVerbosity = ESGValidationVerbosity::Warning;
+	
+	//There is no sane person that would want to change it, but it breaks macros, so it's going as hardcoded number
+	int CircularDependenciesLimit = 0;
+	
+	UPROPERTY(EditAnywhere, Category="Reference and Size", BlueprintReadOnly)
+	ESGValidationVerbosity RedirectorsVerbosity = ESGValidationVerbosity::Warning;
+};
+
+USTRUCT()
+struct STYLEGUIDEMODULES_API FSGReferenceSizeNode
+{
+	GENERATED_BODY()
+	
+	FAssetIdentifier AssetIdentifier;
+	FAssetIdentifier OriginalAssetIdentifier;
+	const IAssetRegistry* AssetRegistry;
+	IAssetManagerEditorModule* EditorModule;
+	bool bIsGameResource;
+};
+
+USTRUCT()
+struct STYLEGUIDEMODULES_API FSGReferenceSizeResponse
+{
+	GENERATED_BODY()
+	
+	TArray<FName> DependenciesVisited;
+	TArray<FName> ReferencersVisited;
+	TArray<FName> RedirectorsVisited;
+	
+	uint64 EditorDiskSize = 0;
+	uint64 GameDiskSize = 0;
+	uint64 EditorMemorySize = 0;
+	uint64 GameMemorySize = 0;
+	
+	int CircularDependencies = 0; 
+};
+
+UCLASS(DisplayName="Reference Count and Asset Size", BlueprintType)
+class STYLEGUIDEMODULES_API USGReferenceSizeModule : public USGModule
+{
+	GENERATED_BODY()
+
+public:
+	
+	USGReferenceSizeModule(const FObjectInitializer& Initializer);
+	
+	virtual bool CanValidateAsset(const FAssetData& AssetData, UObject* Object,
+		FDataValidationContext& Context) const override;
+	virtual EDataValidationResult ValidateLoadedAsset(const FAssetData& InAssetData, UObject* InAsset,
+		const FDataValidationContext& Context) override;
+	virtual void MergeModuleSettings_Implementation(USGModule* Module) override;
+	
+protected:
+	
+	UFUNCTION(BlueprintCallable, Category="Reference Size", meta=(BlueprintProtected))
+	bool GatherDependenciesData(const FName& AssetIdentifier, int64& EditorDiskSize, int64& GameDiskSize, int64& EditorMemorySize, int64&
+	                            GameMemorySize, int& Dependencies, int& Referencers, int
+	                            & CircularDependencies, TArray<FName>& Redirectors);
+
+	static bool VisitDependencyNode(const FSGReferenceSizeNode& Node, FSGReferenceSizeResponse& Response);
+	static bool VisitReferencerNode(const FSGReferenceSizeNode& Node, FSGReferenceSizeResponse& Response);
+	
+	UPROPERTY(EditAnywhere, Category="Reference and Size", BlueprintReadOnly, meta=(ShowOnlyInnerProperties))
+	TMap<TSubclassOf<UObject>, FSGReferenceSizeSettings> PerAssetTypeSettings;
 };

@@ -9,13 +9,13 @@
 #define LOCTEXT_NAMESPACE "StyleGuideReferenceSize"
 
 #define CheckValuesUnit(Description, Value, AllowedValue, Verbosity, Unit) \
-if (Verbosity != ESGValidationVerbosity::None && Value > AllowedValue)\
+if (Settings.Verbosity != ESGValidationVerbosity::None && Value > Settings.AllowedValue)\
 {\
 	FFormatNamedArguments Args;\
 	Args.Add(TEXT("Value"), FText::FromString(FString::FromInt(Value)));\
-	Args.Add(TEXT("AllowedValue"), FText::FromString(FString::FromInt(AllowedValue)));\
+	Args.Add(TEXT("AllowedValue"), FText::FromString(FString::FromInt(Settings.AllowedValue)));\
 	Args.Add(TEXT("Unit"), FText::FromString(#Unit));\
-	EDataValidationResult TempResult = SubmitValidationFailEvent( Verbosity, InAsset, \
+	EDataValidationResult TempResult = SubmitValidationFailEvent( Settings.Verbosity, InAsset, \
 	FText::Format(LOCTEXT( #Description "Failed", \
 	"Asset exceeds maximum allowed " #Description " of {AllowedValue}{Unit} ({Value}{Unit})"), Args));\
 	if (Result < TempResult)\
@@ -30,6 +30,11 @@ AllowedValue, Verbosity, "")
 #define CheckSize(Configuration, Type) CheckValuesUnit( Configuration##Type##Size, Configuration##Type##Size, \
 	Allowed##Configuration##Type##Size, Configuration##Type##SizeVerbosity, B)
 
+USGReferenceSizeModule::USGReferenceSizeModule(const FObjectInitializer& Initializer)
+{
+	PerAssetTypeSettings.Add(UObject::StaticClass());
+}
+
 bool USGReferenceSizeModule::CanValidateAsset(const FAssetData& AssetData, UObject* Object,
                                               FDataValidationContext& Context) const
 {
@@ -41,23 +46,64 @@ EDataValidationResult USGReferenceSizeModule::ValidateLoadedAsset(const FAssetDa
 {
 	int64 EditorDiskSize, GameDiskSize, EditorMemorySize, GameMemorySize;
 	int Dependencies, Referencers, CircularDependencies;
+	TArray<FName> Redirectors;
 	
 	GatherDependenciesData(InAssetData.PackageName, EditorDiskSize, GameDiskSize, 
-		EditorMemorySize, GameMemorySize, Dependencies, Referencers, CircularDependencies);
+		EditorMemorySize, GameMemorySize, Dependencies, Referencers, CircularDependencies, Redirectors);
 	
-	//I know what you probably think of macros in context of debugging and ease of read, 
-	//but they make repetitive blocks easier to write, so I use them.
-	//Especially so, that my IDE of choice (Rider) can display macros expansion previews.
+	//Because TMaps won't be sorted like a hierarchy tree would be, we need to make sure we select
+	//the most explicit match we can find in the PerAssetTypeSettings map, by counting the number of superclasses.
+	FSGReferenceSizeSettings Settings;
+	int ClassDepth = 0;
+	for (auto [AssetClass, AssetSettings] : PerAssetTypeSettings)
+	{
+		if (UClass* Class = AssetClass.Get(); InAssetData.GetClass()->IsChildOf(Class))
+		{
+			int CurrentClassDepth = 0;
+			while (Class)
+			{
+				CurrentClassDepth++;
+				Class = Class->GetSuperClass();
+			}
+			if (CurrentClassDepth > ClassDepth)
+			{
+				Settings = AssetSettings;
+				ClassDepth = CurrentClassDepth;
+			}
+		}
+	}
+	if (ClassDepth > 0)
+	{
+		//I know what you probably think of macros in context of debugging and ease of read, 
+		//but they make repetitive blocks easier to write, so I use them.
+		//Especially so, that my IDE of choice (Rider) can display macros expansion previews.
 	
-	CheckSize(Editor, Disk);
-	CheckSize(Game, Disk);
-	CheckSize(Editor, Memory);
-	CheckSize(Game, Memory);
+		CheckSize(Editor, Disk);
+		CheckSize(Game, Disk);
+		CheckSize(Editor, Memory);
+		CheckSize(Game, Memory);
 	
-	CheckValues(Dependencies, Dependencies, DependenciesLimit, DependenciesVerbosity);
-	CheckValues(Referencers, Referencers, ReferencersLimit, ReferencersVerbosity);
-	CheckValues(CircularDependencies, CircularDependencies, 0, CircularDependenciesVerbosity);
 	
+		CheckValues(Dependencies, Dependencies, DependenciesLimit, DependenciesVerbosity);
+		CheckValues(Referencers, Referencers, ReferencersLimit, ReferencersVerbosity);
+		CheckValues(CircularDependencies, CircularDependencies, CircularDependenciesLimit, CircularDependenciesVerbosity);
+		
+		if (Settings.RedirectorsVerbosity != ESGValidationVerbosity::None)
+		{
+			for (const FName& Redirector : Redirectors)
+			{
+				FFormatNamedArguments Args;
+				Args.Add(TEXT("Redirector"), FText::FromName(Redirector));
+				EDataValidationResult TempResult = SubmitValidationFailEvent( Settings.RedirectorsVerbosity, InAsset, 
+							FText::Format(LOCTEXT( "RedirectorDependency", 
+							"Asset has a reference to a redirector {Redirector}"), Args));
+				if (Result < TempResult)\
+				{\
+				Result = TempResult;\
+				}\
+			}
+		}
+	}
 	return Result;
 }
 
@@ -65,26 +111,14 @@ void USGReferenceSizeModule::MergeModuleSettings_Implementation(USGModule* Modul
 {
 	if (const auto ReferenceSizeModule = Cast<USGReferenceSizeModule>(Module))
 	{
-		EditorDiskSizeVerbosity = ReferenceSizeModule->EditorDiskSizeVerbosity;
-		AllowedEditorDiskSize = ReferenceSizeModule->AllowedEditorDiskSize;
-		GameDiskSizeVerbosity = ReferenceSizeModule->GameDiskSizeVerbosity;
-		AllowedGameDiskSize = ReferenceSizeModule->AllowedGameDiskSize;
-		EditorMemorySizeVerbosity = ReferenceSizeModule->EditorMemorySizeVerbosity;
-		AllowedEditorMemorySize = ReferenceSizeModule->AllowedEditorMemorySize;
-		GameMemorySizeVerbosity = ReferenceSizeModule->GameMemorySizeVerbosity;
-		AllowedGameMemorySize = ReferenceSizeModule->AllowedGameMemorySize;
-		DependenciesVerbosity = ReferenceSizeModule->DependenciesVerbosity;
-		DependenciesLimit = ReferenceSizeModule->DependenciesLimit;
-		ReferencersVerbosity = ReferenceSizeModule->ReferencersVerbosity;
-		ReferencersLimit = ReferenceSizeModule->ReferencersLimit;
-		CircularDependenciesVerbosity = ReferenceSizeModule->CircularDependenciesVerbosity;
+		PerAssetTypeSettings.Append(ReferenceSizeModule->PerAssetTypeSettings);
 	}
 	Super::MergeModuleSettings_Implementation(Module);
 }
 
 bool USGReferenceSizeModule::GatherDependenciesData(const FName& AssetIdentifier, int64& EditorDiskSize,
                                                     int64& GameDiskSize, int64& EditorMemorySize, int64& GameMemorySize, int& Dependencies, int& Referencers, int&
-                                                    CircularDependencies)
+                                                    CircularDependencies, TArray<FName>& Redirectors)
 {
 	FSGReferenceSizeResponse Response;
 	const IAssetRegistry& Registry = FModuleManager::GetModuleChecked<FAssetRegistryModule>(TEXT("AssetRegistry")).Get();
@@ -102,6 +136,7 @@ bool USGReferenceSizeModule::GatherDependenciesData(const FName& AssetIdentifier
 	Dependencies = Response.DependenciesVisited.Num()-1;
 	Referencers = Response.ReferencersVisited.Num()-1;
 	CircularDependencies = Response.CircularDependencies;
+	Redirectors = Response.RedirectorsVisited;
 
 	return Dependencies + Referencers > 0;
 }
@@ -114,9 +149,14 @@ bool USGReferenceSizeModule::VisitDependencyNode(const FSGReferenceSizeNode& Nod
 	FString AssetPackageNameString = AssetIdentifier.PackageName.ToString();
 	const FString AssetPathString = AssetPackageNameString + TEXT(".") + FPackageName::GetLongPackageAssetName(AssetPackageNameString);
 	FAssetData AssetData = Node.AssetRegistry->GetAssetByObjectPath(AssetPathString);
+	
+	if (AssetData.IsRedirector())
+	{
+		Response.RedirectorsVisited.Add(AssetIdentifier.PackageName);
+	}
+	
 	int64 FoundDiskSize = 0;
 	int64 FoundResourceSize = 0;
-	
 	if (Node.bIsGameResource)
 	{
 		Node.EditorModule->GetIntegerValueForCustomColumn(AssetData, IAssetManagerEditorModule::DiskSizeName, FoundDiskSize);
@@ -137,7 +177,7 @@ bool USGReferenceSizeModule::VisitDependencyNode(const FSGReferenceSizeNode& Nod
 	
 	Node.AssetRegistry->GetDependencies(Node.AssetIdentifier.PackageName, Dependencies);
 	Node.AssetRegistry->GetDependencies(Node.AssetIdentifier.PackageName, GameDependencies, Query.Categories, Query.Flags);
-	
+
 	for (const FName & Dependency : Dependencies)
 	{
 		if (Dependency.ToString().StartsWith(TEXT("/Script/")))
