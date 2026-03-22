@@ -14,6 +14,8 @@ EDataValidationResult USGValidator::ValidateLoadedAsset_Implementation(const FAs
 {
 	// TODO: Ensure the assets will be sorted desc by hierarchy.
 	
+	FString AssetPath = InAssetData.PackagePath.ToString() / "";
+	
 	TArray<USGSetup*> CachedSetups = GetStyleGuideSetupAssets(InAssetData);
 	const auto CachedSetup = NewObject<USGSetup>(this);
 	TMap<TSubclassOf<USGModule>, USGModule*> CachedModules;
@@ -43,7 +45,7 @@ EDataValidationResult USGValidator::ValidateLoadedAsset_Implementation(const FAs
 	bool bIsInExcludedDir = false;
 	for (FString ExcludedPath : CachedSetup->Settings.ExcludeDirectories)
 	{
-		if (InAssetData.PackagePath.ToString().StartsWith(ExcludedPath))
+		if (AssetPath.StartsWith(ExcludedPath))
 		{
 			bIsInExcludedDir = true;
 			break;
@@ -104,6 +106,8 @@ TArray<USGSetup*> USGValidator::GetStyleGuideSetupAssets(const FAssetData& InAss
 {
 	TArray<USGSetup*> SGSetups;
 	
+	FString AssetPath = InAssetData.PackagePath.ToString() / "";
+	
 	if(const auto SGDeveloperSettings = GetMutableDefault<USGDeveloperSettings>())
 	{
 		if(USGSetup* Setup = SGDeveloperSettings->GlobalSetup.Get())
@@ -114,14 +118,15 @@ TArray<USGSetup*> USGValidator::GetStyleGuideSetupAssets(const FAssetData& InAss
 
 	const IAssetRegistry& AssetRegistry = FModuleManager::LoadModuleChecked<FAssetRegistryModule>(TEXT("AssetRegistry")).Get();
 
-	TArray<FAssetData> RedirectAssets;
-	AssetRegistry.GetAssetsByClass(USGSetup::StaticClass()->GetClassPathName(), RedirectAssets);
-	for(const FAssetData& AssetData : RedirectAssets)
+	TArray<FAssetData> SetupAssets;
+	AssetRegistry.GetAssetsByClass(USGSetup::StaticClass()->GetClassPathName(), SetupAssets);
+	for(const FAssetData& SetupAsset : SetupAssets)
 	{
-		if(InAssetData.PackagePath == AssetData.PackagePath ||
-			InAssetData.PackagePath.ToString().Contains(AssetData.PackagePath.ToString()))
+		FString SetupAssetPath = SetupAsset.PackagePath.ToString() / "";
+		if(InAssetData.PackagePath == SetupAsset.PackagePath ||
+			AssetPath.Contains(SetupAssetPath))
 		{
-			SGSetups.AddUnique(Cast<USGSetup>(AssetData.GetAsset()));
+			SGSetups.AddUnique(Cast<USGSetup>(SetupAsset.GetAsset()));
 		}
 	}
 	return SGSetups;

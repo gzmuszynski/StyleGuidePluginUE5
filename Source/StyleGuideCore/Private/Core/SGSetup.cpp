@@ -22,7 +22,7 @@ void USGSetup::MergeSettings(USGSetup* Setup)
 	}
 	for (FString & ExcludedDir : Setup->Settings.ExcludeDirectories)
 	{
-		FString ExcludedDirFullPath = FPaths::GetPath(Setup->GetPathName()) / ExcludedDir;
+		FString ExcludedDirFullPath = FPaths::GetPath(Setup->GetPathName()) / ExcludedDir / "";
 		Settings.ExcludeDirectories.Add(ExcludedDirFullPath);
 	}
 }
