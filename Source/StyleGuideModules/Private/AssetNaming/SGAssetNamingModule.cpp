@@ -35,7 +35,6 @@ void USGAssetNamingModule::MergeModuleSettings_Implementation(USGModule* Module)
 			ConditionalSet(IdentifierCheckVerbosity);
 			ConditionalSet(UnknownTypesVerbosity);
 			ConditionalSet(PreSuffixVerbosity);
-			ConditionalSet(AllowedCharacters);
 		
 			for (const FSGAssetNamingTypeSettings& ModuleTypeSettings : AssetNamingModule->Settings.AssetTypeTable.Types)
 			{
@@ -69,22 +68,14 @@ EDataValidationResult USGAssetNamingModule::ValidateLoadedAsset(const FAssetData
 		{
 			Result = EDataValidationResult::Valid;
 		}
-			FRegexPattern Pattern(Settings.AllowedCharacters);
-			FRegexMatcher Matcher(Pattern, AssetName);
-			if(Matcher.FindNext())
-			{
-				int MatchBegin = Matcher.GetMatchBeginning();
-				int MatchEnd = Matcher.GetMatchEnding();
-				int NameLength = AssetName.Len();
 			
-				if(MatchBegin != 0 || MatchEnd != NameLength)
-				{
-					FFormatNamedArguments Args;
-					Args.Add(TEXT("AssetName"), FText::FromString(AssetName));
+			if(!IsAllowedIdentifier(AssetName))
+			{
+				FFormatNamedArguments Args;
+				Args.Add(TEXT("AssetName"), FText::FromString(AssetName));
 
-					Result = SubmitValidationFailEvent(Settings.IdentifierCheckVerbosity, InAsset,
-					FText::Format(LOCTEXT("FailTest", "Asset Contains illegal characters in the filename"), Args));
-				}
+				Result = SubmitValidationFailEvent(Settings.IdentifierCheckVerbosity, InAsset,
+				FText::Format(LOCTEXT("FailTest", "Asset Contains illegal characters in the filename"), Args));
 			}
 	}
 	if (!TypeSettings || TypeSettings->Variants.IsEmpty())

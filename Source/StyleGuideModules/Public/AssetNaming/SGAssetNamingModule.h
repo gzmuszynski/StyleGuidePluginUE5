@@ -27,13 +27,6 @@ struct STYLEGUIDEMODULES_API FSGAssetNamingSettings
 	ESGValidationVerbosity IdentifierCheckVerbosity = ESGValidationVerbosity::Error;
 
 	UPROPERTY(EditAnywhere, Category="Asset Naming", BlueprintReadOnly, meta=(InlineEditConditionToggle))
-	bool Override_AllowedCharacters = false;
-	
-	// Defines the allowed characters during the identifier check.
-	UPROPERTY(EditAnywhere, Category="Asset Naming", BlueprintReadOnly, meta=(EditCondition="Override_AllowedCharacters"))
-	FString AllowedCharacters = "[A-Za-z0-9_]+";
-
-	UPROPERTY(EditAnywhere, Category="Asset Naming", BlueprintReadOnly, meta=(InlineEditConditionToggle))
 	bool Override_UnknownTypesVerbosity = true;
 
 	// Defines the severity of failing a check due to unknown type

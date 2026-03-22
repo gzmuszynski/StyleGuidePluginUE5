@@ -46,6 +46,9 @@ public:
 	                                                  const FDataValidationContext& Context);
 
 protected:
+	
+	UFUNCTION(BlueprintCallable, Category="Style Guide Module", meta=(BlueprintProtected))
+	bool IsAllowedIdentifier(const FString& String) const;
 
 	//This override will disable any module checks, regardless of higher-level style guide setups.
 	UPROPERTY(EditAnywhere, Category="Style Guide Module", BlueprintReadOnly)

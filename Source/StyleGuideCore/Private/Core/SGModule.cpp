@@ -55,6 +55,25 @@ EDataValidationResult USGModule::ValidateLoadedAsset(const FAssetData& InAssetDa
 	return EDataValidationResult::NotValidated;
 }
 
+bool USGModule::IsAllowedIdentifier(const FString& String) const
+{
+	const USGSetup* Setup = GetTypedOuter<USGSetup>();
+
+	const FRegexPattern Pattern(Setup->Settings.AllowedCharacters);
+	FRegexMatcher Matcher(Pattern, String);
+	if(Matcher.FindNext())
+	{
+		const int MatchBegin = Matcher.GetMatchBeginning();
+		const int MatchEnd = Matcher.GetMatchEnding();
+
+		if(const int NameLength = String.Len(); MatchBegin != 0 || MatchEnd != NameLength)
+		{
+			return false;
+		}
+	}
+	return true;
+}
+
 bool USGModule::IsCheckEnabled(FName CheckPropertyName) const
 {
 	// TODO: Very important function. Otherwise all of the checks will be performed regardless of the setting.

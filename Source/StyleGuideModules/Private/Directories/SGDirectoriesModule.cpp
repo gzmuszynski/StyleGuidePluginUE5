@@ -27,6 +27,11 @@ void USGDirectoriesModule::MergeModuleSettings_Implementation(USGModule* Module)
 				AllowedDirectory = PackagePath + "/" + AllowedDirectory;
 			}
 		}
+		if (DirectoriesModule->Override_CheckDirectoryNames)
+		{
+			Override_CheckDirectoryNames = DirectoriesModule->Override_CheckDirectoryNames;
+			CheckDirectoryNamesVerbosity = DirectoriesModule->CheckDirectoryNamesVerbosity;
+		}
 		bDisallowAssetsInCurrentDirectory = DirectoriesModule->bDisallowAssetsInCurrentDirectory;
 	}
 	
@@ -35,7 +40,6 @@ void USGDirectoriesModule::MergeModuleSettings_Implementation(USGModule* Module)
 EDataValidationResult USGDirectoriesModule::ValidateLoadedAsset(const FAssetData& InAssetData, UObject* InAsset,
 	const FDataValidationContext& Context)
 {
-	
 	if (!AllowedDirectories.IsEmpty())
 	{
 		bool bIsInAllowedDirectory = InAssetData.PackagePath.ToString() == SGDirectory && !bDisallowAssetsInCurrentDirectory;
@@ -95,6 +99,24 @@ EDataValidationResult USGDirectoriesModule::ValidateLoadedAsset(const FAssetData
 		const FText Message = FText::Format(
 			LOCTEXT("InDisallowedCurrentDirectory", "Asset is placed inside of a Disallowed Directory: {Directory}"), Args);
 		Result = SubmitValidationFailEvent(ValidationVerbosity, InAsset, Message);
+	}
+	if (Override_CheckDirectoryNames && CheckDirectoryNamesVerbosity != ESGValidationVerbosity::None)
+	{
+		FString PackagePath = InAssetData.PackagePath.ToString();
+		TArray<FString> Directories;
+		PackagePath.ParseIntoArray(Directories, TEXT("/"));
+		
+		for (FString Directory : Directories)
+		{
+			if (!IsAllowedIdentifier(Directory))
+			{
+				FFormatNamedArguments Args;
+				Args.Add(TEXT("Directory"), FText::FromString(Directory));
+
+				Result = SubmitValidationFailEvent(CheckDirectoryNamesVerbosity, InAsset,
+				FText::Format(LOCTEXT("FailTest", "Asset is placed in a directory containing invalid characters: {Directory}"), Args));
+			}
+		}
 	}
 	return Result;
 	

@@ -56,4 +56,11 @@ protected:
 	// "Textures", "SkeletalMeshes", "Animation", etc.
 	UPROPERTY(EditDefaultsOnly, Category="Directories", meta=(EditCondition="Override_DisallowedDirectories"))
 	TArray<FString> DisallowedDirectories;
+	
+	UPROPERTY(EditDefaultsOnly, Category="Directories", meta=(InlineEditConditionToggle))
+	bool Override_CheckDirectoryNames = true;
+	
+	// Enables Directory name validation against Style Guide's Allowed Identifier characters.
+	UPROPERTY(EditDefaultsOnly, Category="Directories", meta=(EditCondition="Override_CheckDirectoryNames"))
+	ESGValidationVerbosity CheckDirectoryNamesVerbosity = ESGValidationVerbosity::Error;
 };
