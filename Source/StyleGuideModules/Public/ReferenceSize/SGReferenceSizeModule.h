@@ -14,8 +14,10 @@
 class IAssetManagerEditorModule;
 class IAssetRegistry;
 
+
+
 USTRUCT(BlueprintType)
-struct STYLEGUIDEMODULES_API FSGReferenceSizeSettings
+struct STYLEGUIDEMODULES_API FSGReferenceSizeTypeSettings
 {
 	GENERATED_BODY()
 	
@@ -71,6 +73,22 @@ struct STYLEGUIDEMODULES_API FSGReferenceSizeSettings
 	ESGValidationVerbosity RedirectorsVerbosity = ESGValidationVerbosity::Warning;
 };
 
+USTRUCT(BlueprintType)
+struct STYLEGUIDEMODULES_API FSGReferenceSizeSettings
+{
+	GENERATED_BODY()
+	
+	UPROPERTY(EditAnywhere, Category="Reference and Size", BlueprintReadOnly, meta=(ShowOnlyInnerProperties))
+	TMap<TSubclassOf<UObject>, FSGReferenceSizeTypeSettings> PerAssetTypeSettings;
+	
+	UPROPERTY(EditAnywhere, Category="Reference and Size", BlueprintReadOnly)
+	ESGValidationVerbosity UnreferenceableDirectoriesVerbosity = ESGValidationVerbosity::Warning;
+	
+	UPROPERTY(EditAnywhere, Category="Reference and Size", BlueprintReadOnly, 
+	meta=(EditConditionHides, EditCondition="UnreferenceableDirectoriesVerbosity != ESGValidationVerbosity::None", ContentDir))
+	TArray<FDirectoryPath> UnreferenceableDirectories;
+};
+
 USTRUCT()
 struct STYLEGUIDEMODULES_API FSGReferenceSizeNode
 {
@@ -81,6 +99,7 @@ struct STYLEGUIDEMODULES_API FSGReferenceSizeNode
 	const IAssetRegistry* AssetRegistry;
 	IAssetManagerEditorModule* EditorModule;
 	bool bIsGameResource;
+	TArray<FString> InvalidDirectories;
 };
 
 USTRUCT()
@@ -91,6 +110,7 @@ struct STYLEGUIDEMODULES_API FSGReferenceSizeResponse
 	TArray<FName> DependenciesVisited;
 	TArray<FName> ReferencersVisited;
 	TArray<FName> RedirectorsVisited;
+	TArray<FString> DirectoriesIllegallyReferenced;
 	
 	uint64 EditorDiskSize = 0;
 	uint64 GameDiskSize = 0;
@@ -120,11 +140,11 @@ protected:
 	UFUNCTION(BlueprintCallable, Category="Reference Size", meta=(BlueprintProtected))
 	bool GatherDependenciesData(const FName& AssetIdentifier, int64& EditorDiskSize, int64& GameDiskSize, int64& EditorMemorySize, int64&
 	                            GameMemorySize, int& Dependencies, int& Referencers, int
-	                            & CircularDependencies, TArray<FName>& Redirectors);
+	                            & CircularDependencies, TArray<FName>& Redirectors, TArray<FString>& IllegalDirectories);
 
 	static bool VisitDependencyNode(const FSGReferenceSizeNode& Node, FSGReferenceSizeResponse& Response);
 	static bool VisitReferencerNode(const FSGReferenceSizeNode& Node, FSGReferenceSizeResponse& Response);
 	
 	UPROPERTY(EditAnywhere, Category="Reference and Size", BlueprintReadOnly, meta=(ShowOnlyInnerProperties))
-	TMap<TSubclassOf<UObject>, FSGReferenceSizeSettings> PerAssetTypeSettings;
+	FSGReferenceSizeSettings ReferenceSizeSettings;
 };

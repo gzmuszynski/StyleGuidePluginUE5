@@ -32,7 +32,7 @@ AllowedValue, Verbosity, "")
 
 USGReferenceSizeModule::USGReferenceSizeModule(const FObjectInitializer& Initializer)
 {
-	PerAssetTypeSettings.Add(UObject::StaticClass());
+	ReferenceSizeSettings.PerAssetTypeSettings.Add(UObject::StaticClass());
 }
 
 bool USGReferenceSizeModule::CanValidateAsset(const FAssetData& AssetData, UObject* Object,
@@ -47,15 +47,16 @@ EDataValidationResult USGReferenceSizeModule::ValidateLoadedAsset(const FAssetDa
 	int64 EditorDiskSize, GameDiskSize, EditorMemorySize, GameMemorySize;
 	int Dependencies, Referencers, CircularDependencies;
 	TArray<FName> Redirectors;
+	TArray<FString> IllegalDirectories;
 	
 	GatherDependenciesData(InAssetData.PackageName, EditorDiskSize, GameDiskSize, 
-		EditorMemorySize, GameMemorySize, Dependencies, Referencers, CircularDependencies, Redirectors);
+	                       EditorMemorySize, GameMemorySize, Dependencies, Referencers, CircularDependencies, Redirectors, IllegalDirectories);
 	
 	//Because TMaps won't be sorted like a hierarchy tree would be, we need to make sure we select
 	//the most explicit match we can find in the PerAssetTypeSettings map, by counting the number of superclasses.
-	FSGReferenceSizeSettings Settings;
+	FSGReferenceSizeTypeSettings Settings;
 	int ClassDepth = 0;
-	for (auto [AssetClass, AssetSettings] : PerAssetTypeSettings)
+	for (auto [AssetClass, AssetSettings] : ReferenceSizeSettings.PerAssetTypeSettings)
 	{
 		if (UClass* Class = AssetClass.Get(); InAssetData.GetClass()->IsChildOf(Class))
 		{
@@ -103,6 +104,25 @@ EDataValidationResult USGReferenceSizeModule::ValidateLoadedAsset(const FAssetDa
 				}\
 			}
 		}
+		if (ReferenceSizeSettings.UnreferenceableDirectoriesVerbosity != ESGValidationVerbosity::None)
+		{
+			for (const FString& IllegalDirMessage : IllegalDirectories)
+			{
+				TArray<FString> IllegalDirPaths;
+				IllegalDirMessage.ParseIntoArray(IllegalDirPaths, TEXT(";"));
+				FFormatNamedArguments Args;
+				Args.Add(TEXT("Asset"), FText::FromString(IllegalDirPaths[0]));
+				Args.Add(TEXT("Reference"), FText::FromString(IllegalDirPaths[1]));
+				Args.Add(TEXT("IllegalDir"), FText::FromString(IllegalDirPaths[2]));
+				EDataValidationResult TempResult = SubmitValidationFailEvent( Settings.RedirectorsVerbosity, InAsset, 
+							FText::Format(LOCTEXT( "IllegalDirReference", 
+							"{Asset} has a reference to {Reference}, which resides in a directory {IllegalDir} which is unreferenceable"), Args));
+				if (Result < TempResult)\
+				{\
+					Result = TempResult;\
+				}\
+			}
+		}
 	}
 	return Result;
 }
@@ -111,21 +131,29 @@ void USGReferenceSizeModule::MergeModuleSettings_Implementation(USGModule* Modul
 {
 	if (const auto ReferenceSizeModule = Cast<USGReferenceSizeModule>(Module))
 	{
-		PerAssetTypeSettings.Append(ReferenceSizeModule->PerAssetTypeSettings);
+		ReferenceSizeSettings.PerAssetTypeSettings.Append(ReferenceSizeModule->ReferenceSizeSettings.PerAssetTypeSettings);
+		ReferenceSizeSettings.UnreferenceableDirectories = ReferenceSizeModule->ReferenceSizeSettings.UnreferenceableDirectories;
+		ReferenceSizeSettings.UnreferenceableDirectoriesVerbosity = ReferenceSizeModule->ReferenceSizeSettings.UnreferenceableDirectoriesVerbosity;
 	}
 	Super::MergeModuleSettings_Implementation(Module);
 }
 
 bool USGReferenceSizeModule::GatherDependenciesData(const FName& AssetIdentifier, int64& EditorDiskSize,
                                                     int64& GameDiskSize, int64& EditorMemorySize, int64& GameMemorySize, int& Dependencies, int& Referencers, int&
-                                                    CircularDependencies, TArray<FName>& Redirectors)
+                                                    CircularDependencies, TArray<FName>& Redirectors, TArray<FString>& IllegalDirectories)
 {
 	FSGReferenceSizeResponse Response;
 	const IAssetRegistry& Registry = FModuleManager::GetModuleChecked<FAssetRegistryModule>(TEXT("AssetRegistry")).Get();
 	IAssetManagerEditorModule& ManagerEditorModule = IAssetManagerEditorModule::Get();
 	ManagerEditorModule.GetCurrentRegistrySource(false);
 	
-	const FSGReferenceSizeNode Node = { AssetIdentifier, AssetIdentifier, &Registry, &ManagerEditorModule };
+	TArray<FString> IllegalDirs;
+	for (FDirectoryPath Path :ReferenceSizeSettings.UnreferenceableDirectories)
+	{
+		IllegalDirs.Add(Path.Path);
+	}
+	
+	const FSGReferenceSizeNode Node = { AssetIdentifier, AssetIdentifier, &Registry, &ManagerEditorModule, false, IllegalDirs};
 	VisitDependencyNode(Node, Response);
 	VisitReferencerNode(Node, Response);
 	
@@ -137,6 +165,7 @@ bool USGReferenceSizeModule::GatherDependenciesData(const FName& AssetIdentifier
 	Referencers = Response.ReferencersVisited.Num()-1;
 	CircularDependencies = Response.CircularDependencies;
 	Redirectors = Response.RedirectorsVisited;
+	IllegalDirectories = Response.DirectoriesIllegallyReferenced;
 
 	return Dependencies + Referencers > 0;
 }
@@ -193,6 +222,15 @@ bool USGReferenceSizeModule::VisitDependencyNode(const FSGReferenceSizeNode& Nod
 			FSGReferenceSizeNode DependencyNode = { Dependency , Node.OriginalAssetIdentifier,
 				Node.AssetRegistry, Node.EditorModule, GameDependencies.Contains(Dependency)};
 			VisitDependencyNode(DependencyNode, Response);
+		}
+		for (FString InvalidDirectory : Node.InvalidDirectories)
+		{
+			if (!Node.AssetIdentifier.PackageName.ToString().StartsWith(InvalidDirectory) && 
+				Dependency.ToString().StartsWith(InvalidDirectory))
+			{
+				Response.DirectoriesIllegallyReferenced.Add(FString::Printf(TEXT("%s;%s;%s)"), 
+					*Node.AssetIdentifier.PackageName.ToString(), *Dependency.ToString(), *InvalidDirectory));
+			}
 		}
 	}
 	return !Dependencies.IsEmpty();
