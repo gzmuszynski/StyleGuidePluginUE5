@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Core/SGSettings.h"
 #include "Core/SGValidationEnums.h"
 #include "Engine/DeveloperSettings.h"
 #include "SGDeveloperSettings.generated.h"
@@ -23,11 +24,11 @@ public:
 	//What highest verbosity level should failed validation checks be classified as.
 	//Any Module verbosity levels will be reduced to match this setting.
 	UPROPERTY(EditAnywhere, Config, Category="Global")
-	ESGValidationVerbosity HighestNameValidationFailedVerbosity = ESGValidationVerbosity::Warning;
+	ESGValidationVerbosity HighestValidationFailedVerbosity = ESGValidationVerbosity::Error;
 
 	//This setup asset will be enforced globally, as lowest priority setup, regardless of directory hierarchy.
 	//WARNING: this will apply to all plugins inside project directory. However, this can be a way to enforce
 	//Style Guide for DLC and game features modules.
 	UPROPERTY(EditAnywhere, Config, Category="Global")
-	TSoftObjectPtr<USGSetup> GlobalSetup;
+	FSGSettings GlobalSetup;
 };

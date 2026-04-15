@@ -18,6 +18,9 @@ EDataValidationResult USGValidator::ValidateLoadedAsset_Implementation(const FAs
 	
 	TArray<USGSetup*> CachedSetups = GetStyleGuideSetupAssets(InAssetData);
 	const auto CachedSetup = NewObject<USGSetup>(this);
+
+	const auto DeveloperSettings = GetMutableDefault<USGDeveloperSettings>();
+	CachedSetup->Settings = DeveloperSettings->GlobalSetup;
 	TMap<TSubclassOf<USGModule>, USGModule*> CachedModules;
 	
 	for (USGSetup* Setup : CachedSetups)
@@ -107,14 +110,6 @@ TArray<USGSetup*> USGValidator::GetStyleGuideSetupAssets(const FAssetData& InAss
 	TArray<USGSetup*> SGSetups;
 	
 	FString AssetPath = InAssetData.PackagePath.ToString() / "";
-	
-	if(const auto SGDeveloperSettings = GetMutableDefault<USGDeveloperSettings>())
-	{
-		if(USGSetup* Setup = SGDeveloperSettings->GlobalSetup.Get())
-		{
-			SGSetups.Add(Setup);
-		}
-	}
 
 	const IAssetRegistry& AssetRegistry = FModuleManager::LoadModuleChecked<FAssetRegistryModule>(TEXT("AssetRegistry")).Get();
 

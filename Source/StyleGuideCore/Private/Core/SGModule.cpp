@@ -7,6 +7,7 @@
 #include "AssetRegistry/IAssetRegistry.h"
 #include "Core/SGValidationEnums.h"
 #include "Core/SGSetup.h"
+#include "Settings/SGDeveloperSettings.h"
 
 void USGModule::MergeModuleSettings_Implementation(USGModule* Module)
 {
@@ -88,6 +89,9 @@ void USGModule::SubmitMessage(const UObject* Asset, FText Message)
 EDataValidationResult USGModule::SubmitValidationFailEvent(ESGValidationVerbosity Verbosity, const UObject* Asset,
                                                            FText Message)
 {
+	const auto GlobalSettings = GetMutableDefault<USGDeveloperSettings>();
+	Verbosity = FMath::Min<ESGValidationVerbosity>(Verbosity, GlobalSettings->HighestValidationFailedVerbosity);
+	
 	switch (Verbosity)
 	{
 	case ESGValidationVerbosity::None:
